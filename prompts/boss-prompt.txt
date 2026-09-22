@@ -1,0 +1,5 @@
+Use case: stylized-concept
+Asset type: single isolated transparent PNG game character sprite.
+Input image: style and camera reference only, the approved office game concept. Boss seated in upper left office is the identity and clothing reference, but draw him standing full body.
+Primary request: ONE adult Chinese male office boss, full body, standing facing lower-right in three-quarter overhead view matching the reference camera. Dark navy blazer, white collared shirt, dark trousers, black leather shoes, rectangular dark glasses. Neat side-part short black hair. Stern but humorous suspicious expression, one hand at his waist and the other adjusting glasses. Match approachable hand-painted 2D cartoon style, compact body proportions, warm colors, crisp dark outlines.
+Composition: single character only, centered, fill most of square canvas with safe transparent padding, no cropping hair or shoes. Genuinely transparent background with alpha channel. No floor, no floor shadow, no desk, no office, no text, no labels, no icons, no speech bubbles, no other characters. Readable at small on-screen sprite size.

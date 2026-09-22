@@ -1,0 +1,8 @@
+Use case: stylized-concept
+Asset type: ONE standalone NPC sprite for a 2D office stealth game.
+Input image 1: office reference for hand-painted cartoon visual style. Input image 2: player sprite reference for camera, scale, proportions and rendering consistency.
+Primary request: exactly ONE friendly adult Chinese male office coworker with short black hair, sage green long-sleeve shirt, dark navy trousers, black shoes, holding one small white coffee mug. Warm smiling expression. Full body, three-quarter overhead camera looking down about 35 degrees, facing image lower-right. Arms separated from torso, one holds mug near waist. No backpack.
+Style: small 2D hand-painted cartoon, dark soft ink outlines, matching reference character proportions and shading.
+Composition: centered entire figure including shoes, fills image with safe padding.
+Background: genuinely transparent PNG with actual alpha channel. Empty outside silhouette; no floor, no shadow, no backdrop, no white rectangle, no checkerboard pattern.
+Constraints: ONE character only; no text, badge, UI, symbol, sprite sheet or other props.

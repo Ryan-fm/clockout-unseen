@@ -1,0 +1,5 @@
+Use case: stylized-concept
+Asset type: single isolated transparent PNG game character sprite.
+Input image: style and camera reference only, the approved office game concept. Use the red-shirt supervisor visible in the middle of that reference as the subject reference.
+Primary request: ONE adult Chinese male office supervisor, full body, standing and facing lower-right in a three-quarter overhead view matching the reference's camera. Coral/red long sleeve collared shirt, dark charcoal trousers, black shoes, holding a small clipboard. Short black hair, slightly suspicious raised eyebrows and funny, mildly stern expression. Match the reference's approachable hand-painted 2D cartoon style, compact body proportions, warm restrained colors, and crisp dark outlines.
+Composition: single character only, centered, fill most of a square canvas with safe transparent padding, no cropping of hair or shoes. True alpha transparent background. No floor, no floor shadow, no office, no text, no labels, no icons, no speech bubble, no exclamation mark, no other characters. The character must remain readable at a small on-screen sprite size.

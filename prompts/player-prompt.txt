@@ -1,0 +1,7 @@
+Use case: stylized-concept
+Asset type: single playable character PNG sprite for a 2D office stealth game.
+Input image: reference for hand-painted cartoon visual style only.
+Primary request: create exactly ONE isolated full-body adult Chinese office worker, black short hair, pale blue long-sleeve shirt, mustard yellow backpack, dark navy trousers, black shoes. Expressive anxious but humorous face. Friendly small 2D hand-painted cartoon with dark soft ink outlines, matching the provided office reference.
+Composition: three-quarter overhead camera, looking down about 35 degrees. Character faces lower-right of the image, arms slightly separated from body ready to walk. Entire figure including shoes and backpack visible, centered, fills canvas with safe padding.
+Background: genuinely transparent PNG with actual alpha channel, completely empty behind character. No floor, no cast shadow, no backdrop, no white rectangle, no checkerboard pattern baked into pixels.
+Constraints: single character only; no text, no badges, no UI, no symbols, no sprite sheet, no additional objects.

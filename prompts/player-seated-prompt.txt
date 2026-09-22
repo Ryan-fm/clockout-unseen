@@ -1,0 +1,8 @@
+Use case: stylized-concept
+Asset type: ONE isolated seated-player PNG sprite for a 2D office stealth game.
+Input image 1: approved office scene, style/camera reference. Input image 2: player identity and clothing reference; preserve this exact character and outfit.
+Primary request: full-body adult Chinese male office worker with short black hair, pale blue long-sleeve shirt, mustard yellow backpack worn on back, dark navy trousers, black shoes, in a seated pose for compositing onto an existing black office chair (DO NOT draw the chair). Face and torso oriented toward UPPER-LEFT of the image, as if working at a monitor off-image. Seen from three-quarter overhead camera looking down about 35 degrees. Show back and partial side profile with backpack visible, legs naturally bent in seated posture, feet comfortably near floor level. Hands extend slightly forward as if typing, but no desk or keyboard is shown.
+Style: small hand-painted 2D cartoon with dark soft ink outlines, character proportions and shading matching both references.
+Composition: center the single seated person, include feet with safe padding, no cropping. Character only occupies most of canvas. DO NOT render a chair, stool or any support.
+Background: genuinely transparent PNG with actual alpha channel. Completely empty outside person silhouette. No floor, no cast shadow, no background, no white rectangle or baked checkerboard.
+Constraints: ONE seated person ONLY; NO CHAIR, no desk, monitor, text, badges, UI, symbols or sprite sheet.

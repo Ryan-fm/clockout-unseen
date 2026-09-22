@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+# Local publishing receipts and development-only review notes
+AGENTS.md
+design-qa.md
+toy-release.json
+evidence/
