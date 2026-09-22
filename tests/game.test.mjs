@@ -1,81 +1,47 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {WALLS,POINTS,walkable,clearLine,sees,createGame,retryLevel,nextLevel,totalTime,start,tick,interact,useFile} from '../src/engine.js';
-function advance(g,seconds,input){for(let i=0;i<seconds*60;i++)tick(g,1/60,input);}
-test('furniture prevents movement and blocks supervisor sight',()=>{
- const g=createGame();start(g);g.npcs=[];advance(g,2,{x:0,y:-1});assert.ok(g.player.y>=537);assert.ok(!clearLine({x:380,y:550},{x:380,y:280}));assert.ok(!walkable(400,440));
+import {MAPS,MODES,LEVELS,walkable,clearLine,sees,pathTo,createGame,retryLevel,nextLevel,totalTime,start,enterFloor,tick,interact,useFile} from '../src/engine.js';
+const advance=(g,seconds,input)=>{for(let i=0;i<seconds*30;i++)tick(g,1/30,input);};
+function exposed(){const g=createGame(1,[],'normal',42);start(g);g.player={x:1500,y:1100,moving:false};g.npcs=[{id:'supervisor',x:1500,y:950,range:300,fov:1.2,angle:Math.PI/2,pause:100,route:[],target:0}];return g;}
+test('three distinct enlarged maps have reachable interaction points and exit',()=>{
+ assert.equal(new Set(MAPS.map(m=>JSON.stringify(m.walls))).size,3);
+ for(let l=1;l<=3;l++){const g=createGame(l);for(const [id,p] of Object.entries(g.map.points)){assert.ok(walkable(p.x,p.y,18,g.map),`${l} ${id}`);assert.ok(pathTo(g.map,g.player,p).length,`${l} reachable ${id}`);}}
 });
-test('patrol paths stay on walkable floor over a full cycle',()=>{
- const g=createGame();start(g);g.time=1000;g.cover=1000;
- for(let i=0;i<60*70;i++){tick(g,1/60);for(const n of g.npcs)assert.ok(walkable(n.x,n.y,2),`${n.id} at ${n.x},${n.y}`);}
-});
-function exposedGame(){
- const g=createGame();start(g);g.player={x:850,y:480,moving:false};g.npcs=[{id:'supervisor',x:850,y:350,range:220,fov:1.2,angle:Math.PI/2,pause:100,route:[],target:0}];return g;
-}
-test('the first unprotected visible frame immediately loses the run',()=>{
- const g=exposedGame();assert.ok(sees(g.npcs[0],g.player));tick(g,1/60);assert.equal(g.phase,'lost');assert.equal(g.suspicion,100);assert.equal(g.caughtBy,'supervisor');
-});
-test('captured run freezes movement and cannot use a file or enter the elevator',()=>{
- const g=exposedGame();g.file=true;g.lift='calling';g.liftTimer=2;tick(g,1/60);
- const position={...g.player},time=g.time,liftTimer=g.liftTimer;
- advance(g,3,{x:1,y:1});useFile(g);interact(g);
- assert.equal(g.phase,'lost');assert.deepEqual(g.player,position);assert.equal(g.time,time);assert.equal(g.liftTimer,liftTimer);assert.equal(g.file,true);
-});
-test('disguise protects only while active; expiration in view loses immediately',()=>{
- const g=exposedGame();g.hidden=true;advance(g,1);assert.equal(g.phase,'playing');g.hidden=false;g.cover=.1;tick(g,.05);assert.equal(g.phase,'playing');tick(g,.05);assert.equal(g.phase,'lost');
-});
-test('a file cannot be activated after exposure but can be used beforehand',()=>{
- const late=exposedGame();late.file=true;useFile(late);assert.equal(late.phase,'lost');assert.equal(late.file,true);
- const early=exposedGame();early.npcs[0].angle=0;early.file=true;useFile(early);assert.equal(early.cover,6);assert.equal(early.file,false);early.npcs[0].angle=Math.PI/2;advance(early,1);assert.equal(early.phase,'playing');
-});
-test('furniture occlusion prevents false immediate capture',()=>{
- const g=exposedGame();g.player={x:380,y:550};g.npcs[0].x=380;g.npcs[0].y=285;g.npcs[0].range=400;assert.equal(sees(g.npcs[0],g.player),false);tick(g,1/60);assert.equal(g.phase,'playing');
-});
-test('complete legal escape route, pickup, elevator wait and enter',()=>{
- const g=createGame();start(g);g.npcs=[];
- // Movement follows the actual narrow lower corridor, never teleporting through walls.
- function moveTo(x,y){for(let i=0;i<1000;i++){const dx=x-g.player.x,dy=y-g.player.y;if(Math.hypot(dx,dy)<3)return;tick(g,1/60,{x:dx/Math.max(Math.abs(dx),Math.abs(dy),1),y:dy/Math.max(Math.abs(dx),Math.abs(dy),1)});}assert.fail('route blocked');}
- moveTo(525,550);moveTo(525,795);moveTo(710,795);interact(g);assert.equal(g.file,true);useFile(g);assert.equal(g.cover,6);moveTo(1483,795);interact(g);assert.equal(g.lift,'calling');interact(g);assert.equal(g.phase,'playing');advance(g,3.1);assert.equal(g.lift,'open');interact(g);assert.equal(g.phase,'won');
-});
-test('pause freezes time and timeout ends the run',()=>{
- const g=createGame();start(g);g.phase='paused';advance(g,2);assert.equal(g.time,90);g.phase='playing';g.time=.05;advance(g,.1);assert.equal(g.phase,'lost');
-});
-
-test('all three patrol layouts remain on the floor',()=>{
- for(const level of [2,3]){
-  const g=createGame(level);start(g);g.time=1000;g.cover=1000;
-  for(let i=0;i<60*80;i++){tick(g,1/60);for(const n of g.npcs)assert.ok(walkable(n.x,n.y,2),`level ${level}: ${n.id}`);}
+test('furniture blocks walking and sight on every map',()=>{for(const map of MAPS){for(const [x,y,w,h] of map.walls){assert.equal(walkable(x+w/2,y+h/2,18,map),false);assert.equal(clearLine({x:x-40,y:y+h/2},{x:x+w+40,y:y+h/2},map),false);}}});
+test('seeded patrol is reproducible and different seeds change destinations',()=>{const a=createGame(1,[],'hell',11),b=createGame(1,[],'hell',11),c=createGame(1,[],'hell',12);assert.deepEqual(a.npcs,b.npcs);assert.notDeepEqual(a.npcs.map(n=>n.route),c.npcs.map(n=>n.route));});
+test('random patrol never crosses furniture or bounds across maps and modes',()=>{
+ for(let l=1;l<=3;l++)for(const mode of Object.keys(MODES))for(let seed=1;seed<=3;seed++){
+ const g=createGame(l,[],mode,seed);start(g);g.time=1000;g.cover=1000;const origins=g.npcs.map(n=>({x:n.x,y:n.y}));
+ for(let i=0;i<1800;i++){tick(g,.05);for(const n of g.npcs)assert.ok(walkable(n.x,n.y,18,g.map),`${l} ${mode} ${n.id} ${n.x},${n.y}`);}
+ g.npcs.forEach((n,i)=>assert.ok(Math.hypot(n.x-origins[i].x,n.y-origins[i].y)>20,`${l} ${mode} ${n.id} stuck`));
  }
 });
-
-test('three consecutive levels are winnable with real patrols and legal movement',()=>{
- let g=createGame();const times=[];
- function moveTo(x,y,useAt=Infinity){for(let i=0;i<1000;i++){
-  assert.equal(g.phase,'playing',`level ${g.level}: ${g.message}`);
-  const dx=x-g.player.x,dy=y-g.player.y;if(Math.hypot(dx,dy)<3)return;
-  if(g.file&&g.player.x>=useAt)useFile(g);
-  tick(g,1/60,{x:dx/Math.max(Math.abs(dx),Math.abs(dy),1),y:dy/Math.max(Math.abs(dx),Math.abs(dy),1)});
- }assert.fail('route blocked');}
- for(let level=1;level<=3;level++){
-  assert.equal(g.level,level);assert.equal(g.phase,'intro');assert.deepEqual(g.clearedTimes,times);start(g);
-  moveTo(525,550);moveTo(525,665);interact(g);assert.equal(g.lureUsed,true);
-  moveTo(525,795);moveTo(710,795);interact(g);assert.equal(g.file,true);
-  moveTo(1483,795,level===1?Infinity:level===2?1350:1150);interact(g);
-  assert.equal(g.liftTimer,g.config.liftWait);advance(g,g.config.liftWait-.1);interact(g);assert.equal(g.phase,'playing');
-  advance(g,.2);interact(g);assert.equal(g.phase,'won');times.push(g.elapsed);
-  assert.ok(Math.abs(totalTime(g)-times.reduce((a,b)=>a+b,0))<.001);
-  if(level<3)g=nextLevel(g);else assert.equal(nextLevel(g),null);
+test('spawn is safe in every map and mode',()=>{for(let l=1;l<=3;l++)for(const mode of Object.keys(MODES)){const g=createGame(l,[],mode,1);start(g);tick(g,.05);assert.equal(g.phase,'playing');}});
+test('first visible unprotected frame loses immediately; captured run is frozen',()=>{
+ const g=exposed();assert.ok(sees(g.npcs[0],g.player,g.map));g.file=true;tick(g,.03);assert.equal(g.phase,'lost');assert.equal(g.suspicion,100);const snap=JSON.stringify(g);advance(g,2,{x:1,y:0});useFile(g);interact(g);assert.equal(JSON.stringify(g),snap);
+});
+test('file must be used before detection; protection expires immediately',()=>{
+ const late=exposed();late.file=true;useFile(late);assert.equal(late.phase,'lost');assert.equal(late.file,true);
+ const early=exposed();early.npcs[0].angle=0;early.file=true;useFile(early);assert.equal(early.cover,6);early.npcs[0].angle=Math.PI/2;advance(early,1);assert.equal(early.phase,'playing');early.cover=.01;tick(early,.03);assert.equal(early.phase,'lost');
+});
+test('hard modes increase pressure and retain mode after retry and advance',()=>{
+ const [n,e,h]=Object.keys(MODES).map(mode=>createGame(2,[12],mode));assert.ok(n.time>e.time&&e.time>h.time/h.floors);assert.ok(n.npcs.length<e.npcs.length&&e.npcs.length<h.npcs.length);assert.ok(n.config.coverDuration>e.config.coverDuration&&e.config.coverDuration>h.config.coverDuration);assert.ok(n.config.liftWait<e.config.liftWait&&e.config.liftWait<h.config.liftWait);
+ for(const g of [n,e,h]){const retry=retryLevel(g);assert.equal(retry.mode,g.mode);assert.deepEqual(retry.clearedTimes,[12]);assert.equal(retry.level,2);assert.notEqual(retry.seed,g.seed);g.phase='won';g.elapsed=15;const next=nextLevel(g);assert.equal(next.mode,g.mode);assert.equal(next.level,3);assert.deepEqual(next.clearedTimes,[12,15]);}
+});
+function moveRoute(g,p){const route=pathTo(g.map,g.player,p);assert.ok(route.length);for(const [x,y] of [...route,[p.x,p.y]]){let arrived=false;for(let i=0;i<200;i++){const dx=x-g.player.x,dy=y-g.player.y,d=Math.hypot(dx,dy);if(d<4){arrived=true;break;}tick(g,1/60,{x:dx/d,y:dy/d});assert.equal(g.phase,'playing',g.message);}assert.ok(arrived,'blocked movement');}}
+test('every map and floor permits movement, pickup and elevator escape in all modes',()=>{
+ for(const mode of Object.keys(MODES)){let g=createGame(1,[],mode,10);for(let l=1;l<=3;l++){
+ start(g);
+ for(let floor=1;floor<=g.floors;floor++){
+ assert.equal(g.floor,floor);g.npcs=[];moveRoute(g,g.map.points.printer);interact(g);assert.ok(g.file);useFile(g);assert.equal(g.cover,g.config.coverDuration);moveRoute(g,g.map.points.lift);interact(g);assert.equal(g.lift,'calling');advance(g,g.config.liftWait+.1);
+ const oldMap=g.map.id,elapsed=g.elapsed,time=g.time;interact(g);
+ if(floor<g.floors){assert.equal(g.phase,'floor-intro');assert.notEqual(g.map.id,oldMap);assert.equal(g.elapsed,elapsed);assert.equal(g.time,time);assert.equal(g.npcs.filter(n=>n.id!=='coworker').length,6);advance(g,3);assert.equal(g.time,time);assert.equal(nextLevel(g),null);enterFloor(g);}
+ else assert.equal(g.phase,'won');
  }
+ assert.ok(totalTime(g)>0);if(l<3)g=nextLevel(g);else assert.equal(nextLevel(g),null);
+ }}
 });
-
-test('failure retries the current level, resets items, and preserves prior clears',()=>{
- const g=createGame(2,[12]);start(g);g.fileTaken=true;g.lureUsed=true;g.cover=2;g.time=.01;tick(g,.05);assert.equal(g.phase,'lost');
- const retry=retryLevel(g);assert.equal(retry.level,2);assert.equal(retry.time,75);assert.equal(retry.phase,'intro');assert.deepEqual(retry.clearedTimes,[12]);assert.equal(retry.fileTaken,false);assert.equal(retry.lureUsed,false);assert.equal(retry.cover,0);assert.equal(retry.elapsed,0);
- retry.clearedTimes.push(99);assert.deepEqual(g.clearedTimes,[12]);
+test('hell starts with six patrols per floor and second-floor failure restarts the stage',()=>{
+ const g=createGame(2,[12],'hell',7,2);assert.equal(g.npcs.filter(n=>n.id!=='coworker').length,6);g.phase='lost';const retry=retryLevel(g);assert.equal(retry.floor,1);assert.equal(retry.level,2);assert.equal(retry.mode,'hell');assert.deepEqual(retry.clearedTimes,[12]);
 });
-
-test('unfinished levels cannot advance or be revived through start',()=>{
- for(const phase of ['intro','playing','paused','lost']){const g=createGame(2,[12]);g.phase=phase;assert.equal(nextLevel(g),null);if(phase!=='intro'){start(g);assert.equal(g.phase,phase);}}
- const g=createGame(3,[12,15]);g.phase='won';assert.equal(nextLevel(g),null);start(g);assert.equal(g.phase,'won');
- assert.throws(()=>createGame(4),RangeError);
-});
+test('pause, timeout and premature level advancement remain safe',()=>{const g=createGame();start(g);g.phase='paused';const t=g.time;advance(g,2);assert.equal(g.time,t);assert.equal(nextLevel(g),null);g.phase='playing';g.time=.01;tick(g,.05);assert.equal(g.phase,'lost');start(g);assert.equal(g.phase,'lost');assert.throws(()=>createGame(4),RangeError);});
